@@ -4,14 +4,14 @@ Docker setup for Recruit AI application with Backend API, MongoDB, Redis, and wo
 
 ## Prerequisites
 
-- Docker (v20.10+) - [Install](https://docs.docker.com/get-docker/)
-- Docker Compose (v1.29+)
+- Docker  [Install](https://docs.docker.com/get-docker/)
+- Docker Compose 
 
 Verify installation:
 
 ```bash
 docker --version
-docker-compose --version
+docker compose version 
 ```
 
 ## Quick Start
