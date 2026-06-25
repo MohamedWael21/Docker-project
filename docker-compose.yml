@@ -1,0 +1,114 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: naqla_redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  mongodb:
+    image: mongo:6.0
+    container_name: naqla_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  backend:
+    image: mohamedwael2/recruit-ai-backend:latest
+    container_name: naqla_backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGO_URI=mongodb://mongodb:27017/recruitai
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: always
+
+  worker-background:
+    image: mohamedwael2/recruit-ai-backend:latest
+    container_name: naqla_worker_background
+    command: npm run worker
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGO_URI=mongodb://mongodb:27017/recruitai
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: always
+
+  worker-cv:
+    image: mohamedwael2/recruit-ai-backend:latest
+    container_name: naqla_worker_cv
+    command: npm run worker:cv
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGO_URI=mongodb://mongodb:27017/recruitai
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: always
+
+  worker-automation:
+    image: mohamedwael2/recruit-ai-backend:latest
+    container_name: naqla_worker_automation
+    command: npm run worker:automation
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGO_URI=mongodb://mongodb:27017/recruitai
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: always
+
+  frontend:
+    image: mohamedwael2/recruit-ai-frontend:latest
+    container_name: naqla_frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  redis_data:
+  mongodb_data:
